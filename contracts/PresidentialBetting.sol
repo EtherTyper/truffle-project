@@ -22,63 +22,71 @@ contract Commodity is ERC20 {
     }
 }
 
-enum Candidate {
-    None, // MUST BE FIRST (DEFAULT VALUE)
-    Trump,
-    Biden
-}
-
 contract PredictionMarket {
+    uint numOutcomes;
     address[] public arbiters;
-    mapping (address => Candidate) public votes;
-    mapping (Candidate => Commodity) commodities;
+    mapping (address => uint) public votes;
+    Commodity[] commodities;
 
-    constructor(address[] memory arbiters_) {
-        commodities[Candidate.Trump] = new Commodity("TRUMP");
-        commodities[Candidate.Biden] = new Commodity("BIDEN");
+    constructor(address[] memory arbiters_, string[] memory outcomes) {
         arbiters = arbiters_;
+        numOutcomes = outcomes.length;
+        commodities = new Commodity[](numOutcomes);
+        for (uint i = 0; i < numOutcomes; i++) {
+            commodities[i] = new Commodity(outcomes[i]);
+        }
     }
 
-    function bet(Candidate candidate) public payable {
-        require(candidate != Candidate.None);
-        commodities[candidate].mint(msg.sender, msg.value);
+    function bet(uint outcome) public payable {
+        require(0 <= outcome && outcome <= numOutcomes);
+        commodities[outcome].mint(msg.sender, msg.value);
     }
 
-    function vote(Candidate winner) public {
-        votes[msg.sender] = winner;
+    function vote(uint outcome) public {
+        votes[msg.sender] = outcome;
     }
 
-    function getWinner() public view returns (Candidate) {
-        uint[3] memory voteCounts;
+    function getWinner() public view returns (bool decided, uint decision) {
+        uint[] memory voteCounts = new uint[](numOutcomes);
 
         for (uint i = 0; i < arbiters.length; i++) {
             voteCounts[uint(votes[arbiters[i]])]++;
         }
 
-        for (uint i = 0; i < 3; i++) {
+        for (uint i = 0; i < numOutcomes; i++) {
             if (3 * voteCounts[i] >= 2 * arbiters.length) {
                 // Supermajority vote.
-                return Candidate(i);
+                return (true, i);
             }
         }
 
-        return Candidate.None;
+        return (false, 0);
     }
 
     function payout(address payable recipient) public {
-        Candidate winner = getWinner();
-        require(winner != Candidate.None);
+        (bool decided, uint trueOutcome) = getWinner();
+        require(decided);
 
-        uint winnerValue = commodities[winner].totalSupply();
+        uint winnerValue = commodities[trueOutcome].totalSupply();
         uint totalValue = 0;
-        for (uint i = 1; i < 3; i++) {
-            totalValue += commodities[Candidate(i)].totalSupply();
+        for (uint i = 0; i < numOutcomes; i++) {
+            totalValue += commodities[i].totalSupply();
         }
 
-        uint balance = commodities[winner].balanceOf(msg.sender);
+        uint balance = commodities[trueOutcome].balanceOf(msg.sender);
         uint scaledBalance = (balance * totalValue) / winnerValue;
-        
-        commodities[winner].burn(msg.sender, balance);
+
+        commodities[trueOutcome].burn(msg.sender, balance);
         recipient.transfer(scaledBalance);
+    }
+}
+
+contract Presidential2020Market is PredictionMarket {
+    constructor(address[] memory arbiters) PredictionMarket(arbiters, getCandidates()) {}
+    function getCandidates() private pure returns (string[] memory) {
+        string[] memory candidates = new string[](2);
+        candidates[0] = "TRUMP";
+        candidates[1] = "BIDEN";
+        return candidates;
     }
 }
