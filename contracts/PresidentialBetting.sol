@@ -28,6 +28,9 @@ contract PredictionMarket {
     mapping (address => uint) public votes;
     Commodity[] commodities;
 
+    bool decided;
+    uint decision;
+
     constructor(address[] memory arbiters_, string[] memory outcomes) {
         arbiters = arbiters_;
         numOutcomes = outcomes.length;
@@ -38,45 +41,48 @@ contract PredictionMarket {
     }
 
     function bet(uint outcome) public payable {
-        require(0 <= outcome && outcome <= numOutcomes);
+        require(!decided && 0 <= outcome && outcome <= numOutcomes);
         commodities[outcome].mint(msg.sender, msg.value);
     }
 
     function vote(uint outcome) public {
-        votes[msg.sender] = outcome;
+        votes[msg.sender] = outcome + 1;
     }
 
-    function getWinner() public view returns (bool decided, uint decision) {
+    function recordWinner() public {
+        require(!decided);
+
         uint[] memory voteCounts = new uint[](numOutcomes);
 
         for (uint i = 0; i < arbiters.length; i++) {
-            voteCounts[uint(votes[arbiters[i]])]++;
+            uint arbiterVote = votes[arbiters[i]] - 1;
+            if (arbiterVote != 0)
+                voteCounts[arbiterVote]++;
         }
 
         for (uint i = 0; i < numOutcomes; i++) {
             if (3 * voteCounts[i] >= 2 * arbiters.length) {
                 // Supermajority vote.
-                return (true, i);
+                (decided, decision) = (true, i);
             }
         }
 
-        return (false, 0);
+        (decided, decision) = (false, 0);
     }
 
     function payout(address payable recipient) public {
-        (bool decided, uint trueOutcome) = getWinner();
         require(decided);
 
-        uint winnerValue = commodities[trueOutcome].totalSupply();
+        uint winnerValue = commodities[decision].totalSupply();
         uint totalValue = 0;
         for (uint i = 0; i < numOutcomes; i++) {
             totalValue += commodities[i].totalSupply();
         }
 
-        uint balance = commodities[trueOutcome].balanceOf(msg.sender);
+        uint balance = commodities[decision].balanceOf(msg.sender);
         uint scaledBalance = (balance * totalValue) / winnerValue;
 
-        commodities[trueOutcome].burn(msg.sender, balance);
+        commodities[decision].burn(msg.sender, balance);
         recipient.transfer(scaledBalance);
     }
 }
