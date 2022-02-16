@@ -56,8 +56,9 @@ contract PredictionMarket {
 
         for (uint i = 0; i < arbiters.length; i++) {
             uint arbiterVote = votes[arbiters[i]] - 1;
-            if (arbiterVote != 0)
+            if (arbiterVote != 0) {
                 voteCounts[arbiterVote]++;
+            }
         }
 
         for (uint i = 0; i < numOutcomes; i++) {
