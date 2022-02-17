@@ -1,4 +1,5 @@
 {
+  "license": "Apache-2.0",
   "dependencies": {
     "@openzeppelin/contracts": "^4.5.0"
   },
