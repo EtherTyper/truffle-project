@@ -22,27 +22,20 @@ contract Commodity is ERC20 {
     }
 }
 
-contract PredictionMarket {
-    uint256 numOutcomes;
+contract OutcomeOracle {
+    uint256 public numOutcomes;
     address[] public arbiters;
     mapping(address => uint256) public votes;
-    Commodity[] commodities;
 
-    bool decided;
-    uint256 decision;
+    string[] public outcomes;
 
-    constructor(address[] memory arbiters_, string[] memory outcomes) {
+    bool public decided;
+    uint256 public decision;
+
+    constructor(address[] memory arbiters_, string[] memory outcomes_) {
         arbiters = arbiters_;
+        outcomes = outcomes_;
         numOutcomes = outcomes.length;
-        commodities = new Commodity[](numOutcomes);
-        for (uint256 i = 0; i < numOutcomes; i++) {
-            commodities[i] = new Commodity(outcomes[i]);
-        }
-    }
-
-    function bet(uint256 outcome) public payable {
-        require(!decided && 0 <= outcome && outcome <= numOutcomes);
-        commodities[outcome].mint(msg.sender, msg.value);
     }
 
     function vote(uint256 outcome) public {
@@ -70,27 +63,47 @@ contract PredictionMarket {
 
         (decided, decision) = (false, 0);
     }
+}
+
+contract PredictionMarket {
+    Commodity[] public commodities;
+    OutcomeOracle public oracle;
+
+    constructor(OutcomeOracle oracle_) {
+        oracle = oracle_;
+        commodities = new Commodity[](oracle.numOutcomes());
+        for (uint256 i = 0; i < oracle.numOutcomes(); i++) {
+            commodities[i] = new Commodity(oracle.outcomes(i));
+        }
+    }
+
+    function bet(uint256 outcome) public payable {
+        require(
+            !oracle.decided() && 0 <= outcome && outcome <= oracle.numOutcomes()
+        );
+        commodities[outcome].mint(msg.sender, msg.value);
+    }
 
     function payout(address payable recipient) public {
-        require(decided);
+        require(oracle.decided());
 
-        uint256 winnerValue = commodities[decision].totalSupply();
+        uint256 winnerValue = commodities[oracle.decision()].totalSupply();
         uint256 totalValue = 0;
-        for (uint256 i = 0; i < numOutcomes; i++) {
+        for (uint256 i = 0; i < oracle.numOutcomes(); i++) {
             totalValue += commodities[i].totalSupply();
         }
 
-        uint256 balance = commodities[decision].balanceOf(msg.sender);
+        uint256 balance = commodities[oracle.decision()].balanceOf(msg.sender);
         uint256 scaledBalance = (balance * totalValue) / winnerValue;
 
-        commodities[decision].burn(msg.sender, balance);
+        commodities[oracle.decision()].burn(msg.sender, balance);
         recipient.transfer(scaledBalance);
     }
 }
 
 contract Presidential2020Market is PredictionMarket {
     constructor(address[] memory arbiters)
-        PredictionMarket(arbiters, getCandidates())
+        PredictionMarket(new OutcomeOracle(arbiters, getCandidates()))
     {}
 
     function getCandidates() private pure returns (string[] memory) {
