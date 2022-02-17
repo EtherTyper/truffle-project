@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "truffle compile",
-    "format": "prettier -w 'contracts/**/*.sol' '*.json'",
-    "lint": "solhint 'contracts/**/*.sol'"
+    "format": "prettier -w '**/*.sol' '*.json'",
+    "lint": "solhint 'contracts/**/*.sol' 'test/**/*.sol'"
   }
 }
