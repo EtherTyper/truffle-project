@@ -1,6 +1,6 @@
 // contracts/Presidential2020Market.sol
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.12;
 import "./PredictionMarket.sol";
 
 contract Presidential2020Market is PredictionMarket {

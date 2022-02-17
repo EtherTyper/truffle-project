@@ -1,6 +1,6 @@
 // contracts/OutcomeOracle.sol
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.12;
 
 contract OutcomeOracle {
     uint256 public numOutcomes;
