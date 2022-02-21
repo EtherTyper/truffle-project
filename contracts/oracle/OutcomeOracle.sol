@@ -3,13 +3,13 @@
 pragma solidity ^0.8.12;
 
 interface OutcomeOracle {
-    function numOutcomes() external returns (uint256);
+    function numOutcomes() external view returns (uint256);
 
-    function outcomes(uint256) external returns (string memory);
+    function outcomes(uint256) external view returns (string memory);
 
-    function decided() external returns (bool);
+    function decided() external view returns (bool);
 
-    function decision() external returns (uint256);
+    function decision() external view returns (uint256);
 
     function recordWinner() external;
 }
