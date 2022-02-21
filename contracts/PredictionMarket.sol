@@ -12,31 +12,30 @@ contract PredictionMarket {
     constructor(OutcomeOracle oracle_) {
         oracle = oracle_;
         commodities = new Commodity[](oracle.numOutcomes());
-        for (uint256 i = 0; i < oracle.numOutcomes(); i++) {
+        for (uint i = 0; i < oracle.numOutcomes(); i++) {
             commodities[i] = new Commodity(oracle.outcomes(i));
         }
     }
 
-    function bet(uint256 outcome) public payable {
+    function bet(address[] memory recipients) public payable {
         require(!oracle.decided(), "No betting after decision.");
-        require(
-            0 <= outcome && outcome <= oracle.numOutcomes(),
-            "Invalid outcome specified."
-        );
-        commodities[outcome].mint(msg.sender, msg.value);
+        require(recipients.length == oracle.numOutcomes(), "One recipient per outcome.");
+        for (uint i = 0; i < oracle.numOutcomes(); i++) {
+            commodities[i].mint(recipients[i], msg.value);
+        }
     }
 
     function payout(address payable recipient) public {
         require(oracle.decided(), "No payouts before decision.");
 
-        uint256 winnerValue = commodities[oracle.decision()].totalSupply();
-        uint256 totalValue = 0;
-        for (uint256 i = 0; i < oracle.numOutcomes(); i++) {
+        uint winnerValue = commodities[oracle.decision()].totalSupply();
+        uint totalValue = 0;
+        for (uint i = 0; i < oracle.numOutcomes(); i++) {
             totalValue += commodities[i].totalSupply();
         }
 
-        uint256 balance = commodities[oracle.decision()].balanceOf(msg.sender);
-        uint256 scaledBalance = (balance * totalValue) / winnerValue;
+        uint balance = commodities[oracle.decision()].balanceOf(msg.sender);
+        uint scaledBalance = (balance * totalValue) / winnerValue;
 
         commodities[oracle.decision()].burn(msg.sender, balance);
         recipient.transfer(scaledBalance);

@@ -11,7 +11,7 @@ contract Presidential2020Market is PredictionMarket {
     function getCandidates() private pure returns (string[] memory) {
         string[] memory candidates = new string[](2);
         candidates[0] = "TRUMP";
-        candidates[1] = "BIDEN";
+        candidates[1] = "NOTRUMP";
         return candidates;
     }
 }
