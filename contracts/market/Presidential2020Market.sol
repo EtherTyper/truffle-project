@@ -1,11 +1,12 @@
-// contracts/Presidential2020Market.sol
+// contracts/market/Presidential2020Market.sol
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.12;
 import "./PredictionMarket.sol";
+import "../oracle/VoteOracle.sol";
 
 contract Presidential2020Market is PredictionMarket {
     constructor(address[] memory arbiters)
-        PredictionMarket(new OutcomeOracle(arbiters, getCandidates()))
+        PredictionMarket(new VoteOracle(arbiters, getCandidates()))
     {}
 
     function getCandidates() private pure returns (string[] memory) {

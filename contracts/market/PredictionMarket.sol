@@ -1,8 +1,8 @@
-// contracts/PresidentialBetting.sol
+// contracts/market/PresidentialBetting.sol
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.12;
 import "./Commodity.sol";
-import "./OutcomeOracle.sol";
+import "../oracle/OutcomeOracle.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract PredictionMarket {

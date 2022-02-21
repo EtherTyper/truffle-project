@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.12;
 
-contract OutcomeOracle {
+import "./OutcomeOracle.sol";
+
+contract VoteOracle is OutcomeOracle {
     uint256 public numOutcomes;
     address[] public arbiters;
     mapping(address => uint256) public votes;
