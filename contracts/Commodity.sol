@@ -10,12 +10,12 @@ contract Commodity is ERC20 {
         owner = msg.sender;
     }
 
-    function mint(address recipient, uint amount) public {
+    function mint(address recipient, uint256 amount) public {
         require(msg.sender == owner, "Only owner can mint.");
         _mint(recipient, amount);
     }
 
-    function burn(address recipient, uint amount) public {
+    function burn(address recipient, uint256 amount) public {
         require(msg.sender == owner, "Only owner can burn.");
         _burn(recipient, amount);
     }
