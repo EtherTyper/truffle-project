@@ -31,16 +31,10 @@ contract PredictionMarket {
     function payout(address payable recipient) public {
         require(oracle.decided(), "No payouts before decision.");
 
-        uint256 winnerValue = commodities[oracle.decision()].totalSupply();
-        uint256 totalValue = 0;
-        for (uint256 i = 0; i < oracle.numOutcomes(); i++) {
-            totalValue += commodities[i].totalSupply();
-        }
+        Commodity winner = commodities[oracle.decision()];
+        uint256 balance = winner.balanceOf(msg.sender);
 
-        uint256 balance = commodities[oracle.decision()].balanceOf(msg.sender);
-        uint256 scaledBalance = (balance * totalValue) / winnerValue;
-
-        commodities[oracle.decision()].burn(msg.sender, balance);
-        recipient.transfer(scaledBalance);
+        winner.burn(msg.sender, balance);
+        recipient.transfer(balance);
     }
 }
